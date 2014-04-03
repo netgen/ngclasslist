@@ -2,7 +2,7 @@
 
 Netgen Class List Datatype is an eZ Publish extension that provides a datatype to select and store a list of content classes.
 
-Suppose you are developing a Category class that has attributes which parametrise how fetching of children works. You would add a `class_filter_type` attribute (which is of `ngclasslist` datatype provided by the extension) to your Category class and would use it in the following way in the code:
+Suppose you are developing a Category class that has attributes which parametrise how fetching of children works. You would add a `class_filter_array` attribute (which is of `ngclasslist` datatype provided by the extension) to your Category class and would use it in the following way in the code:
 
 ```
 {def $children = fetch(
