@@ -1,0 +1,16 @@
+{
+    "name": "netgen/ngclasslist",
+    "description": "Netgen Class List Datatype is an eZ Publish extension that provides a datatype to select and store a list of content classes.",
+    "type": "ezpublish-legacy-extension",
+    "license": "GPL-2.0",
+    "authors": [
+        {
+            "name": "Netgen",
+            "email": "info@netgen.hr"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "ezsystems/ezpublish-legacy-installer": "*"
+    }
+}
