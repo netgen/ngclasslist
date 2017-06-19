@@ -10,6 +10,17 @@ class NgClassListType extends eZDataType
     const CLASS_LIST_VARIABLE = "_ngclasslist_class_list_";
     const CLASS_LIST_FIELD = "data_text";
 
+    const DEFAULT_VALUE_VARIABLE = '_ngclasslist_class_list_default_value_';
+    const ALLOWED_GROUP_VARIABLE = '_ngclasslist_allowed_groups_';
+    const CLASS_ATTRIBUTE_LIST_FIELD = "data_text5";
+
+    private static $classesByGroup;
+
+    /**
+     * @var eZContentClass[]
+     */
+    private static $allClasses;
+
     /**
      * Constructor
      */
@@ -20,6 +31,23 @@ class NgClassListType extends eZDataType
             ezpI18n::tr( "extension/ngclasslist/datatypes", "Class list" ),
             array( "serialize_supported" => true )
         );
+
+        if (self::$allClasses === null){
+            self::$allClasses = eZContentClass::fetchAllClasses();
+        }
+
+        if (self::$classesByGroup === null){
+            foreach(self::$allClasses as $class){
+                /** @var eZContentClassClassGroup[] $groupList */
+                $groupList = $class->fetchGroupList();
+                foreach($groupList as $group){
+                    if (!isset(self::$classesByGroup[$group->attribute('group_name')])){
+                        self::$classesByGroup[$group->attribute('group_name')] = array();
+                    }
+                    self::$classesByGroup[$group->attribute('group_name')][] = $class;
+                }
+            }
+        }
     }
 
     /**
@@ -35,6 +63,9 @@ class NgClassListType extends eZDataType
         {
             $data = trim( $originalContentObjectAttribute->attribute( self::CLASS_LIST_FIELD ) );
             $contentObjectAttribute->setAttribute( self::CLASS_LIST_FIELD, $data );
+        }else{
+            $classAttributeContent = $contentObjectAttribute->contentClassAttribute()->attribute('content');
+            $contentObjectAttribute->setAttribute( self::CLASS_LIST_FIELD, implode(',', (array)$classAttributeContent['selected_class_identifiers']) );
         }
     }
 
@@ -168,6 +199,63 @@ class NgClassListType extends eZDataType
     }
 
     /**
+     * @param eZHTTPTool $http
+     * @param string $base
+     * @param eZContentClassAttribute $classAttribute
+     */
+    function fetchClassAttributeHTTPInput( $http, $base, $classAttribute )
+    {
+        $defaultValueName = $base . self::DEFAULT_VALUE_VARIABLE . $classAttribute->attribute( 'id' );
+        $allowedGroupsName = $base . self::ALLOWED_GROUP_VARIABLE . $classAttribute->attribute( 'id' );
+
+        $data = array(
+            'default_class_identifiers' => false,
+            'allowed_groups' => false
+        );
+        if ( $http->hasPostVariable( $defaultValueName ) )
+        {
+            $defaultValue = $http->postVariable( $defaultValueName );
+            $data['default_class_identifiers'] = array_unique($defaultValue);
+        }
+        if ( $http->hasPostVariable( $allowedGroupsName ) )
+        {
+            $allowedGroups = $http->postVariable( $allowedGroupsName );
+            $data['allowed_groups'] = $allowedGroups;
+        }
+
+        $classAttribute->setAttribute(self::CLASS_ATTRIBUTE_LIST_FIELD, json_encode($data));
+        $classAttribute->store();
+    }
+
+    /**
+     * @param eZContentClassAttribute $classAttribute
+     *
+     * @return array
+     */
+    function classAttributeContent( $classAttribute )
+    {
+        $content = array(
+            "selected_class_identifiers" => array(),
+            "allowed_groups" => array(),
+            "classes_by_group" => self::$classesByGroup
+        );
+
+        $data = json_decode($classAttribute->attribute(self::CLASS_ATTRIBUTE_LIST_FIELD), true);
+
+        if ( !empty( $data['default_class_identifiers'] ) )
+        {
+            $content['selected_class_identifiers'] = $data['default_class_identifiers'];
+        }
+
+        if ( !empty( $data['allowed_groups'] ) )
+        {
+            $content["allowed_groups"] = $data['allowed_groups'];
+        }
+
+        return $content;
+    }
+
+    /**
      * Returns string representation of data for simplified export
      *
      * @param eZContentObjectAttribute $contentObjectAttribute
@@ -226,6 +314,30 @@ class NgClassListType extends eZDataType
     function supportsBatchInitializeObjectAttribute()
     {
         return true;
+    }
+
+    /**
+     * @param eZContentClassAttribute $classAttribute
+     *
+     * @return array
+     */
+    function batchInitializeObjectAttributeData( $classAttribute )
+    {
+        $default = null;
+        $classAttributeContent = $classAttribute->attribute('content');
+        if (!empty($classAttributeContent['selected_class_identifiers']))
+        {
+            $db = eZDB::instance();
+            $default = implode(',', (array)$classAttributeContent['selected_class_identifiers']);
+            $default = "'" . $db->escapeString( $default ) . "'";
+        }
+
+        if ( $default !== '' && $default !== NULL )
+        {
+            return array( self::CLASS_LIST_FIELD => $default );
+        }
+
+        return array();
     }
 }
 
