@@ -19,5 +19,9 @@
         <source>No classes</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Allowed groups</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 </TS>

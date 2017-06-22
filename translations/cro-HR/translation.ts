@@ -19,5 +19,9 @@
         <source>No classes</source>
         <translation>Nema klasa</translation>
     </message>
+    <message>
+        <source>Allowed groups</source>
+        <translation>Dopuštene grupe</translation>
+    </message>
 </context>
 </TS>
