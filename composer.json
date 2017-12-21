@@ -6,11 +6,14 @@
     "authors": [
         {
             "name": "Netgen",
-            "email": "info@netgen.hr"
+            "email": "info@netgen.hr",
+            "homepage": "https://www.netgenlabs.com"
         }
     ],
-    "minimum-stability": "dev",
     "require": {
         "ezsystems/ezpublish-legacy-installer": "*"
+    },
+    "extra": {
+        "ezpublish-legacy-extension-name": "ngclasslist"
     }
 }
